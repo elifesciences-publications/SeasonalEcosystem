@@ -10,7 +10,6 @@ x0 = [P*c0; rho0.*b0 ; s_init; ctrl_init];
 if ~exist('rc')
     rc = 1e-8;
 end
-
 if ~exist('flux_control')
     flux_control = false;
 end
@@ -93,7 +92,6 @@ switch_num = sum(abs(diff(xstore(end,:))));
 
 
 if plt
-    
     figure
     subplot(1,2,1)
     hold on
@@ -119,7 +117,6 @@ if plt
     legend({'Strategy 1','Strategy 2','Control state','Nutrient 1 Greater'},...
         'Location','southeast')
     xlabel('Time')
-    
 end
 
 end

@@ -12,8 +12,7 @@ function [endb,endNr,bstore,Nrstore] = serialdilMADAPT(Bt,Ct,s,P,m,p,plt,bo,errt
 %p - number of nutrient
 %plt - 1 to generate plot, 0 to suppress
 %bo - initial biomass ratio
-%errype - 1 for abundance, 0 for diversity (note: diversity error is new 
-            %and hasn't been thoroughly tested)
+%errype - 1 for abundance, 0 for diversity
 %K - half-velocity coefficient, default to 1
             
 %SIMULATION SET-UP---------------------------------------------------------
