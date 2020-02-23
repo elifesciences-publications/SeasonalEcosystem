@@ -1,7 +1,7 @@
 function [endb,endNr,bstore,Nrstore] = serialdilMADAPT_troph(Bt,Ct,s,P,m,p,plt,bo,errtype,K,chi)
 
 %Jaime Lopez 9/28/17
-%This function simulates serial dilutions
+%This function simulates serial dilutions with cross-feeding
 %Simulation ends dependent on extinction tolerance and RAE tolerance
 
 %Bt - transfer biomass
@@ -12,10 +12,10 @@ function [endb,endNr,bstore,Nrstore] = serialdilMADAPT_troph(Bt,Ct,s,P,m,p,plt,b
 %p - number of nutrient
 %plt - 1 to generate plot, 0 to suppress
 %bo - initial biomass ratio
-%errype - 1 for abundance, 0 for diversity (note: diversity error is new 
-            %and hasn't been thoroughly tested)
+%errype - 1 for abundance, 0 for diversity
 %K - half-velocity coefficient, default to 1
-            
+%chi - nutrient conversion matrix
+         
 %SIMULATION SET-UP---------------------------------------------------------
 
 if exist('bo') == 0 %Check if initial biomass ratio was specified
@@ -23,11 +23,9 @@ if exist('bo') == 0 %Check if initial biomass ratio was specified
 else
     b = bo; %Specified initial biomass
 end
-
 if exist('errtype') == 0 %Check if errtype was specified
     errtype = 1; %Default to abundance
 end
-
 if exist('K') == 0
     K = 1;
 end

@@ -3,6 +3,7 @@ function [b,Nr,Bstore,Cstore,tstore] = multispeciesbatchMADAPT_troph(bo,Bt,Ct,s,
 %Jaime Lopez 9/27/17
 %This function computes one batch of m microbes competing for p substrates
 %Monod growth, all growth parameters unity, adaptive timestepping
+%This function supports cross-feeding
 
 %bo - initial biomass ratio
 %Bt - transfer biomass
@@ -13,6 +14,7 @@ function [b,Nr,Bstore,Cstore,tstore] = multispeciesbatchMADAPT_troph(bo,Bt,Ct,s,
 %p - number of nutrient
 %plt - 1 to generate plot, 0 to suppress
 %K - half-velocity coefficient
+%chi - nutrient conversion matrix
 
 %PARAMETERS----------------------------------------------------------------
 

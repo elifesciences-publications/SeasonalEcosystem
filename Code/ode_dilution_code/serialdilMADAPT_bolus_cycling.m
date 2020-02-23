@@ -1,20 +1,18 @@
-function [endb,endNr,bstore,Nrstore,bstore_spike,endb_spike,endb_spike_median,endb_median] = serialdilMADAPT_spike(Bt,Ct,s,P,m,p,plt,bo,K,spike,batch_limit)
+function [endb,endNr,bstore,Nrstore] = serialdilMADAPT_bolus_cycling(Bt,Ct,s,P_cycle,m,p,plt,bo,K)
 
 %Jaime Lopez 9/28/17
-%This function simulates serial dilutions with spike-in
+%This function simulates serial dilutions with cycles of boluses
 %Simulation ends dependent on extinction tolerance and RAE tolerance
 
 %Bt - transfer biomass
 %Ct - initial nutrient load 
 %s - strategy matrix
-%P - nutrient ratios
+%P_cycle - cycle of nutrient ratios
 %m - number of species
 %p - number of nutrient
 %plt - 1 to generate plot, 0 to suppress
 %bo - initial biomass ratio
 %K - half-velocity coefficient, default to 1
-%spike - what fraction of the batch is immigrants
-%batch_limit = maximum number of batches
             
 %SIMULATION SET-UP---------------------------------------------------------
 
@@ -30,13 +28,17 @@ end
 
 bstore = zeros(m,1e7);%Preallocate biomass ratio storage vector
 bstore(:,1) = b; %Biomass ratio storage vector entry one
-bstore_spike = bstore; %Preallocate biomass with spike vector
 Nrstore = zeros(1e7,p); %Preallocate N storage
+
+cycle_length = size(P_cycle,2);
+repeated_P_cycle = repmat(P_cycle,1,ceil(1e7/cycle_length));
+
+tol = 1e-8; %Relative absolute error tolerance for stopping transfers
+extol = 1e-75; %Extinction tolerance for stopping transfers
 
 o = 0; %Main loop exit variable
 i = 0; %Transfer tracking variable
-from_batch = round((1-spike)*Bt);
-from_spike = round(spike*Bt);
+er = 100;
 %SIMULATION----------------------------------------------------------------
 
 while o == 0
@@ -44,14 +46,26 @@ while o == 0
     i = i + 1;
     
     %Simulate batch
-    [bstore(:,i+1),Nrstore(i,:)] = multispeciesbatchMADAPT(bstore_spike(:,i),Bt,Ct,s,P,m,p,0,K);
-    btemp = bstore(:,i+1)*(Ct+Bt);
-    btemp = floor(btemp) + (btemp - floor(btemp) > rand(m,1));
-    btemp = (my_hygernd(btemp,from_batch) + my_hygernd(b*Bt,from_spike))/Bt;
-    bstore_spike(:,i+1) = btemp;
-        
-    if i > batch_limit %Exit loop if loop count exceeds limit
+    [bstore(:,i+1),Nrstore(i,:)] = multispeciesbatchMADAPT(bstore(:,i),Bt,Ct,s,repeated_P_cycle(:,i),m,p,0,K);
+    
+    if mod(i-1,cycle_length) == 0 && i > 2*cycle_length
+        b_cycle_curr = mean(bstore(:,i+2-cycle_length:i+1),2);
+        b_cycle_prev = mean(bstore(:,i+2-2*cycle_length:i+1-cycle_length),2);
+        er = abs((b_cycle_curr - b_cycle_prev)./b_cycle_curr);
+    end
+    
+    if max(er) < tol %Exit loop of error below threshold
         o = 1;
+        disp(['The model has been ended due to an RAE of '...
+            num2str(transpose(er))])
+        disp('The populations are')
+        disp(bstore(:,i+1))
+    end
+    
+    if min(bstore(:,i+1)) < extol %Exit loop if an organism has died
+        o = 1;
+        disp(['The model has been ended due to an population of '...
+            num2str(min(bstore(:,i+1)))])
     end
 end
 
@@ -59,13 +73,7 @@ end
 %PROCESS DATA--------------------------------------------------------------
 
 bstore = bstore(:,1:(i+1)); %Eliminate additional zeroes
-endb = mean(bstore(:,end-round(0.5*batch_limit):end),2); %Final biomass fraction
-endb_median = median(bstore(:,end-round(0.5*batch_limit):end),2);
-
-bstore_spike = bstore_spike(:,1:(i+1)); %Eliminate additional zeroes
-endb_spike = mean(bstore_spike(:,end-round(0.5*batch_limit):end),2); %Final spiked biomass fraction
-endb_spike_median = median(bstore_spike(:,end-round(0.5*batch_limit):end),2);
-
+endb = bstore(:,end); %Final biomass fraction
 Nrstore = Nrstore(1:i,:); %Eliminate additional zeros
 endNr = Nrstore(end,:); %Final N values
 
@@ -86,7 +94,7 @@ if plt == 1
         end
     end
     title(['Competition between ' num2str(m) ' species for ' num2str(p) ...
-        ' nutrients at ' num2str(P(1)) '/' num2str(P(2))])
+        ' nutrients'])
     xlabel('Transfer number')
     ylabel('Population fraction at batch start')
     leg = [];
@@ -102,6 +110,9 @@ if plt == 1
         leg = [leg; legi];
     end
     legend(leg)
+    if min(endb) < extol
+    ylim([extol, 1.5]);
+    end
     set(gca,'YScale', 'log')
     
     %SIMPLEX PLOTS IF P = 3
