@@ -1,3 +1,7 @@
+This code is associated with the paper from Erez et al., "Nutrient levels and trade-offs control
+diversity in a serial dilution ecosystem". eLife, 2020. http://doi.org/10.7554/eLife.57790
+
+
 # SeasonalEcosystem
 Code and data for the article "Nutrient levels and trade-offs control diversity in a model seasonal ecosystem"
 arXiv: https://arxiv.org/abs/1902.09039
